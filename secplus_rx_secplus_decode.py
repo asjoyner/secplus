@@ -26,7 +26,7 @@ if __name__ != "builtins":  # Don't import within GRC
 class blk(gr.sync_block):
     """Decoder for Chamberlain garage door openers"""
 
-    def __init__(self, samp_rate=10000, threshold=0.02):
+    def __init__(self, samp_rate=10000, threshold=0.02, callback=None):
         gr.sync_block.__init__(
             self,
             name='Security+ Decoder',
@@ -41,6 +41,7 @@ class blk(gr.sync_block):
         self.buffer = []
         self.last_pair = []
         self.pair = []
+        self.callback = callback
 
     def work(self, input_items, output_items):
         for n, sample in enumerate(input_items[0]):
@@ -82,4 +83,6 @@ class blk(gr.sync_block):
         if len(self.pair) == 40 and self.pair != self.last_pair:
             rolling, fixed = secplus.decode(self.pair)
             print(secplus.pretty(rolling, fixed))
+            if self.callback:
+                self.callback(rolling, fixed)
             self.last_pair = self.pair
